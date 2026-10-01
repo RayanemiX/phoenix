@@ -1,27 +1,48 @@
-// Génère la sidebar + topbar. Pour ajouter un module : ajoute une ligne dans MODULES.
-// phase = phase de développement où le module devient actif (null = déjà actif).
+// Sidebar + topbar. Pour ajouter un module : ajoute une ligne dans MODULES.
+// [id, libellé, phase (null = actif), description]
 const MODULES = [
-  ['Dashboard','dashboard.html',null],['Fournisseurs','pages/suppliers.html',2],
-  ['Sourcing & Études de marché','pages/sourcing.html',2],['Besoins & Achats','pages/purchases.html',3],
-  ["Appels d'offres / RFQ",'pages/rfq.html',3],['Commandes','pages/orders.html',3],
-  ['Stocks & Approvisionnements','pages/inventory.html',4],['Analyse des coûts','pages/costs.html',4],
-  ['Négociation','pages/negotiation.html',5],['Cahiers des charges','pages/specifications.html',5],
-  ['Performance fournisseurs','pages/supplier-performance.html',5],['Stratégie achats','pages/strategy.html',6],
-  ['Achats durables','pages/sustainability.html',6],['Marchés publics','pages/public-procurement.html',6],
-  ['Risques fournisseurs','pages/risks.html',6],['Cas pratiques IA','pages/cases.html',7],
-  ['Réglementation & Normes','pages/regulations.html',7],['Indicateurs économiques','pages/analytics.html',8],
-  ['Comptabilité analytique','pages/costs.html#analytique',4],['Progression ESITH','pages/progression.html',8],
-  ['Paramètres','pages/settings.html',8]
+  ['dashboard','Dashboard',null,''],
+  ['suppliers','Fournisseurs',2,'Base fournisseurs, contacts, certifications, historique des offres et incidents.'],
+  ['sourcing','Sourcing & Études de marché',2,'Market Intelligence : recherche, comparaison et enregistrement de fournisseurs.'],
+  ['purchases','Besoins & Achats',3,'Demandes d\'achat : besoin, quantité, budget, critères, validation.'],
+  ['rfq','Appels d\'offres / RFQ',3,'RFI, RFQ, RFP, réception et comparaison des offres.'],
+  ['orders','Commandes',3,'Purchase Orders, statuts, réceptions.'],
+  ['inventory','Stocks & Approvisionnements',4,'Articles, point de commande, alertes et mouvements de stock.'],
+  ['costs','Analyse des coûts',4,'Coût de revient, TCO, coût rendu import, scénarios.'],
+  ['analytique','Comptabilité analytique',4,'Simulateur d\'entreprise : coûts directs/indirects, fixes/variables, scénarios.'],
+  ['negotiation','Négociation',5,'Simulateur de négociation avec un fournisseur IA et analyse descriptive.'],
+  ['specifications','Cahiers des charges',5,'Générateur de cahier des charges en 17 sections, export PDF.'],
+  ['supplier-performance','Performance fournisseurs',5,'Scorecards, KPI, historique mensuel et alertes.'],
+  ['strategy','Stratégie achats',6,'Segmentation, stratégies fournisseur, sourcing, dual sourcing.'],
+  ['sustainability','Achats durables',6,'Évaluation RSE et comparaison de scénarios économiques/environnementaux.'],
+  ['public-procurement','Marchés publics',6,'Simulations de consultation, offres, critères et attribution.'],
+  ['risks','Risques fournisseurs',6,'Analyse et suivi des risques fournisseurs.'],
+  ['cases','Cas pratiques IA',7,'AI Procurement Lab : cas générés par l\'IA, corrigés par un tuteur.'],
+  ['regulations','Réglementation & Normes',7,'Base juridique et normative pédagogique, checklist de conformité.'],
+  ['analytics','Indicateurs économiques',8,'Inflation, change, matières premières, transport.'],
+  ['progression','Progression ESITH',8,'Compétences par semestre et par domaine, basées sur tes exercices.'],
+  ['settings','Paramètres',8,'Profil, préférences, mode démo.']
 ];
+
 const Layout = {
-  render(user, base = '') {
-    const items = MODULES.map(([label, href, phase]) => phase
-      ? `<span class="nav disabled" title="Disponible en phase ${phase}">${Utils.esc(label)} <small>P${phase}</small></span>`
-      : `<a class="nav ${location.pathname.endsWith(href) ? 'active' : ''}" href="${base}${href}">${Utils.esc(label)}</a>`).join('');
+  currentId() {
+    return location.pathname.endsWith('module.html')
+      ? new URLSearchParams(location.search).get('m') : 'dashboard';
+  },
+  hrefOf(id) { return id === 'dashboard' ? 'dashboard.html' : 'module.html?m=' + id; },
+  render(user) {
+    const cur = this.currentId();
+    const items = MODULES.map(([id, label, phase]) =>
+      `<a class="nav ${id === cur ? 'active' : ''}" href="${this.hrefOf(id)}">${Utils.esc(label)}${phase ? `<small>P${phase}</small>` : ''}</a>`).join('');
     document.getElementById('app').innerHTML = `
-      <aside class="sidebar" id="sidebar"><div class="brand">${CONFIG.APP_NAME}<small>${CONFIG.APP_SUBTITLE}</small></div>${items}</aside>
-      <div class="main"><header class="topbar"><button class="burger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-      <span class="grow"></span><span class="muted">${Utils.esc(user.email)}</span><button class="btn small" onclick="Auth.logout()">Déconnexion</button></header>
-      <main id="content"></main></div>`;
+      <aside class="sidebar" id="sidebar">
+        <div class="brand"><img class="logo" src="assets/logo.png" alt="" onerror="this.remove()">
+          <div>${Utils.esc(CONFIG.APP_NAME)}<small>${Utils.esc(CONFIG.APP_SUBTITLE)}</small></div></div>${items}</aside>
+      <div class="backdrop" onclick="document.getElementById('sidebar').classList.remove('open')"></div>
+      <div class="main"><header class="topbar">
+        <button class="burger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <span class="grow"></span><span class="muted">${Utils.esc(user.email)}</span>
+        <button class="btn small" onclick="Auth.logout()">Déconnexion</button></header>
+        <main id="content"></main></div>`;
   }
 };
